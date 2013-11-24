@@ -90,11 +90,8 @@
                     }
                 }
             },
-            transitionCallback: function(){
-                return (cache.vendor==='Moz' || cache.vendor==='ms') ? 'transitionend' : cache.vendor+'TransitionEnd';
-            },
             canTransform: function(){
-                return typeof settings.element.style[cache.vendor+'Transform'] !== 'undefined';
+                return typeof settings.element.style[cache.vendorTransform] !== 'undefined';
             },
             deepExtend: function(destination, source) {
                 var property;
@@ -166,7 +163,7 @@
                         if( !utils.canTransform() ){
                             return parseInt(settings.element.style.left, 10);
                         } else {
-                            var matrix = win.getComputedStyle(settings.element)[cache.vendor+'Transform'].match(/\((.*)\)/),
+                            var matrix = win.getComputedStyle(settings.element)[cache.vendorTransform].match(/\((.*)\)/),
                                 ieOffset = 8;
                             if (matrix) {
                                 matrix = matrix[1].split(',');
@@ -180,7 +177,7 @@
                     }
                 },
                 easeCallback: function(){
-                    settings.element.style[cache.vendor+'Transition'] = '';
+                    settings.element.style[cache.vendorTransition] = '';
                     cache.translation = action.translate.get.matrix(4);
                     cache.easing = false;
                     clearInterval(cache.animatingInterval);
@@ -191,7 +188,7 @@
                     }
 
                     utils.dispatchEvent('animated');
-                    utils.events.removeEvent(settings.element, utils.transitionCallback(), action.translate.easeCallback);
+                    utils.events.removeEvent(settings.element, cache.vendorTransitionCallback, action.translate.easeCallback);
                 },
                 easeTo: function(n) {
 
@@ -202,17 +199,17 @@
                         cache.easing = true;
                         cache.easingTo = n;
 
-                        settings.element.style[cache.vendor+'Transition'] = 'all ' + settings.transitionSpeed + 's ' + settings.easing;
+                        settings.element.style[cache.vendorTransition] = 'all ' + settings.transitionSpeed + 's ' + settings.easing;
 
                         cache.animatingInterval = setInterval(function() {
                             utils.dispatchEvent('animating');
                         }, 1);
                         
-                        utils.events.addEvent(settings.element, utils.transitionCallback(), action.translate.easeCallback);
+                        utils.events.addEvent(settings.element, cache.vendorTransitionCallback, action.translate.easeCallback);
                         action.translate.x(n);
                     }
                     if(n===0){
-                           settings.element.style[cache.vendor+'Transform'] = '';
+                           settings.element.style[cache.vendorTransform] = '';
                        }
                 },
                 x: function(n) {
@@ -235,7 +232,7 @@
 
                     if( utils.canTransform() ){
                         var theTranslate = 'translate3d(' + n + 'px, 0,0)';
-                        settings.element.style[cache.vendor+'Transform'] = theTranslate;
+                        settings.element.style[cache.vendorTransform] = theTranslate;
                     } else {
                         settings.element.style.width = (win.innerWidth || doc.documentElement.clientWidth)+'px';
 
@@ -281,7 +278,7 @@
                     }
                     
                     utils.dispatchEvent('start');
-                    settings.element.style[cache.vendor+'Transition'] = '';
+                    settings.element.style[cache.vendorTransition] = '';
                     cache.isDragging = true;
                     cache.hasIntent = null;
                     cache.intentChecked = false;
@@ -469,6 +466,9 @@
             if (opts.element) {
                 utils.deepExtend(settings, opts);
                 cache.vendor = utils.vendor();
+                cache.vendorTransform = cache.vendor + 'Transform';
+                cache.vendorTransition = cache.vendor + 'Transition';
+		cache.vendorTransitionCallback = (cache.vendor==='Moz' || cache.vendor==='ms') ? 'transitionend' : cache.vendor+'TransitionEnd';
                 action.drag.listen();
             }
         };
